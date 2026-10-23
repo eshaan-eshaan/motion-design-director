@@ -61,6 +61,23 @@ Both accept a source other than GitHub (`-Source <path>` / `--source <path>`), a
 
 **Optional bare `/motion-design`.** Claude Code does not offer an un-namespaced command from a plugin. The supported workaround is a personal skill: `install.ps1 -BareCommand` / `install.sh --bare-command` copies the skill to `~/.claude/skills/motion-design` (or `$CLAUDE_CONFIG_DIR/skills`), and refuses to overwrite an existing folder. Trade-offs: that copy does not update with the plugin, and the skill is then listed twice. Delete the folder to undo it.
 
+## Effects
+
+The skill also adds named effects to new or existing videos, including talking-head footage. Name them in your brief:
+
+```text
+/motion-director:motion-design add /number-roll for 12,400 signups (source: Stripe, Oct 2026), landing on "signups"
+```
+
+| Category | Effects |
+|---|---|
+| Presenter (need a person on camera) | /logo-orbit, /claude-beside-me, /typewriter-cut, /reel-fan, /shutter-strike, /before-after, /all-at-once, /title-orbit, /clone-room, /frame-break, /head-pop-out, /vertigo, /spotlight, /depth-ui, /ribbon-wrap, /tile-tunnel |
+| Data (need your real numbers and a source) | /growth-chart, /line-draw, /number-roll |
+| Text | /pixel-title, /words-kinetic |
+| Shot and transition | /grid-dive, /magnifying-lens, /portal, /infinite-zoom, /cube-spin, /liquid-glass, /screen-in-screen, /phone-fan, /shatter, /pull-back-reveal, /zoom-through |
+
+These are effect names inside the skill, not separate Claude Code commands. For each request the skill applies the effect directly when everything it needs is there, offers 2 or 3 options when there is a real choice, or pushes back. It pushes back, for example, on a chart with no real numbers, a logo you may not have rights to, or too many effects close together. For footage it first checks whether a person is on camera, and builds a person matte by itself when presenter effects need one. Specs for every effect are in [`effects.md`](plugins/motion-director/skills/motion-design/effects.md).
+
 ## Prerequisites
 
 - Claude Code with plugin support (tested with 2.1.212 and 2.1.309; update Claude Code if `claude plugin` is not recognised).
@@ -128,7 +145,7 @@ The install scripts set this variable for their own process automatically.
 
 ## License and third-party notices
 
-The original work in this repository is released under the [MIT License](LICENSE): the skill (`SKILL.md`), the starter kit (`starter-kit.md`), `qa-frames.cjs`, the install scripts and the manifests.
+The original work in this repository is released under the [MIT License](LICENSE): the skill (`SKILL.md`), the effects library (`effects.md`), the starter kit (`starter-kit.md`), `qa-frames.cjs`, the install scripts and the manifests.
 
 The MIT License does **not** cover anything this repository only points to:
 
@@ -145,6 +162,7 @@ plugins/motion-director/
   .claude-plugin/plugin.json               plugin manifest, declares the dependency
   skills/motion-design/
     SKILL.md                               the creative-direction skill
+    effects.md                             specs for the named effects (/logo-orbit, /number-roll, ...)
     starter-kit.md                         type-checked starter code and its verification notes
     scripts/qa-frames.cjs                  frame QA gate (same script as the one in starter-kit.md)
 scripts/install.ps1, scripts/install.sh    optional convenience installers

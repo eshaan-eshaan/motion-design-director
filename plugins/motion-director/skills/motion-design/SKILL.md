@@ -1,7 +1,7 @@
 ---
 name: motion-design
-description: Creative-director and motion-design layer for Remotion video work. Use for motion graphics, product promo videos, SaaS launch videos, product demos, UI animation, kinetic typography, cinematic product videos, animated explainers, marketing videos, and any Remotion project where story, look, motion or polish matters. Decides story, art direction, motion language, camera choreography, UI choreography and visual QA (premium light mode by default), then delegates all Remotion implementation to the official remotion-* skills. Invoke as /motion-director:motion-design with a brief such as "15-second promo for my AI calendar".
-argument-hint: "[brief, e.g. 15s promo for my AI calendar, 16:9]"
+description: Creative-director and motion-design layer for Remotion video work. Use for motion graphics, product promo videos, SaaS launch videos, product demos, UI animation, kinetic typography, cinematic product videos, animated explainers, marketing videos, and any Remotion project where story, look, motion or polish matters. Decides story, art direction, motion language, camera choreography, UI choreography and visual QA (premium light mode by default), then delegates all Remotion implementation to the official remotion-* skills. Also adds named effects to new or existing videos, including presenter (talking-head) footage, such as /logo-orbit, /number-roll, /words-kinetic and /portal, applying, offering or pushing back on each under a decision policy. Invoke as /motion-director:motion-design with a brief such as "15-second promo for my AI calendar".
+argument-hint: "[brief, e.g. 15s promo for my AI calendar, 16:9; or an effect, e.g. add /number-roll at 0:12]"
 ---
 
 # /motion-design: Creative Director Layer for Remotion
@@ -15,7 +15,7 @@ Official Remotion Skills  -> technical knowledge + implementation (APIs, project
 /motion-design (this)     -> creative direction, story, art direction, motion language, camera, UI motion, QA
 ```
 
-Tags like (P12) refer to the numbered principles this skill was written from. Tags like (V2) mark the v2 creative-direction layer: **project truth first (1.1), real assets first (1.2), product film not animated dashboard (5.2), feature-to-motion translation (5.3), one hero moment (5.6), object continuity and transformational transitions (5.7, 6.6), a motivated camera (6.5), large UI (4.3), and a Creative Director Review before the final render (8.6).**
+Tags like (P12) refer to the numbered principles this skill was written from. Tags like (V2) mark the v2 creative-direction layer: **project truth first (1.1), real assets first (1.2), product film not animated dashboard (5.2), feature-to-motion translation (5.3), one hero moment (5.6), object continuity and transformational transitions (5.7, 6.6), a motivated camera (6.5), large UI (4.3), and a Creative Director Review before the final render (8.6).** Tags like (FX) mark the effects layer: **the effects decision policy (1.3), the person check (1.4), and the named effects library (section 11, full specs in [effects.md](effects.md)).**
 
 ---
 
@@ -70,7 +70,7 @@ Scale the ceremony to the request. A single animated component gets a brief plan
 
 | # | Phase | Output | Gate |
 |---|---|---|---|
-| 0 | **Intake and discovery**: infer the brief from the prompt (5.8); **inspect the real project and assets when provided** (1.1, 1.2) | Creative brief + project fact sheet + asset audit + assumptions | Ask at most 1 or 2 questions, only if the answer would materially change the film and the project cannot supply it |
+| 0 | **Intake and discovery**: infer the brief from the prompt (5.8); **inspect the real project and assets when provided** (1.1, 1.2); **run the person check when the project has footage** (1.4) | Creative brief + project fact sheet + asset audit + assumptions + presenter / no-presenter verdict | Ask at most 1 or 2 questions, only if the answer would materially change the film and the project cannot supply it |
 | 1 | **Story**: story spine, narrative pattern, one-sentence takeaway, **hero moment, feature → motion chains** (5.3, 5.6) | Story spine + hero moment | Hook, hero moment and payoff identified |
 | 2 | **Art direction**: brand system, tokens, motion language | Brand + motion spec | Light mode unless told otherwise |
 | 3 | **Storyboard**: scene cards, energy curve, continuity chain, camera plan, cue sheet, frame budget | Storyboard table | Frame math adds up; every scene card complete |
@@ -119,6 +119,42 @@ Rank the assets, then assign roles: **hero** (the one or two strongest; they get
 - **Prefer real assets over fabricated ones.** Do not generate or redraw stand-ins (logos, product shots, UI) when the real ones exist.
 - **Do not just place assets in cards.** For image-heavy products, make the assets the motion objects: cut out, scale, travel along paths, stack, fan out, get picked up, combine, and land in the next state (product → card → selection → combo → cart). Crop to the detail that matters, then reveal context.
 - Never distort, never upscale far past native size, never recolor real brand assets. Load them as the official skills describe (`public/` and `staticFile()`, `/remotion-markup` images reference).
+
+### 1.3 Effects: decision policy (FX)
+
+Named effects (`/logo-orbit`, `/number-roll`, `/portal` and the rest) are indexed in section 11 and specified in [effects.md](effects.md). The user names them in the brief; this policy decides what happens next. For named effects it replaces the "decide, do not ask" default of 5.8.
+
+**Purpose first.** Before applying any effect, answer one question: *"What does the viewer understand or feel better because of this effect?"* If the honest answer is "nothing, it only adds motion", say so and recommend skipping it (the purpose test in section 3).
+
+**Apply directly**, without asking, only when all of these are true:
+- Every required input is present (footage, matte, text, assets, real data with a source).
+- There is one obvious slot: a matching spoken word, a cut, or an empty stretch of screen that fits the effect's duration.
+- It does not collide with an existing effect or text, and it stays inside the density budget (11.3).
+
+Then apply it, render QA stills, and report what was done with the timeline table (11.4).
+
+**Offer options** when any of these is true:
+- Two or more good slots exist, or the effect must be adapted (for example a presenter effect in a video with no presenter).
+- An input is missing but could be supplied or substituted.
+- The effect would replace an existing beat instead of filling empty space.
+
+Give 2 to 3 options. Each says **where** (timestamp, and the spoken word or cut it locks to), **what changes**, and **what it costs** (runtime, re-timing, assets needed); mark one **Recommended**. Batch all questions into one round. Never ask more than once for the same effect.
+
+**Push back** (explain plainly, suggest an alternative) when:
+- A data effect has no real numbers. Never invent, round up or "illustrate" numbers. Ask for the figure and its source, or offer a data-free alternative.
+- A presenter effect is requested but there is no presenter and no sensible adaptation (1.4).
+- The effect would break the density budget or clash with the video's tone (for example a slam or flash in a calm educational film).
+- Assets carry legal risk: trademarked logos, other people's photos, real brand UI.
+
+### 1.4 Person check (FX)
+
+Run once per video that contains footage, before choosing effects:
+1. Sample about 10 frames spread across the video and run a person or face detector on them (for example MediaPipe face detection or selfie segmentation).
+2. A person visible in most sampled frames: a **presenter video**. No person found: a **no-presenter video**.
+
+**Presenter video.** Before applying any presenter effect, generate a person matte for the clip silently, without asking: Robust Video Matting if available, MediaPipe Selfie Segmentation as the lighter fallback. If neither is installed, set up the fallback in a project-local environment (never globally) and note it in the final report; if that is impossible, say so in one line and treat presenter effects as unavailable for this run. Cache the matte next to the clip (`<clip>_matte.webm`, or a transparent `<clip>_person.webm`) and reuse it on later runs instead of regenerating it. Build presenter effects as three layers, **background → effect → person on top**, so elements can pass behind the person. Then apply presenter effects normally under 1.3.
+
+**No-presenter video** (animation, screen recording, B-roll). Do not generate a matte and do not mention matting. Do not offer presenter-only effects (the Presenter rows in 11.2) unless the user asks for one by name. If they do, use a version without "behind you" when it still makes sense (for example /pixel-title or /title-orbit centred on screen); otherwise say in one line that it needs a person on camera and suggest the closest effect that works. Data, text and transition effects work as normal.
 
 ---
 
@@ -169,7 +205,7 @@ The result must look **premium, polished, intentional, human-designed, cinematic
 |---|---|
 | Soft shadow | Depth and elevation; lifted element = active element |
 | Blur (2-5px) | Depth-of-field focus shift: background UI softens when a panel takes focus. Max 2-3 large layers (render cost). Never blur text in or out as a "style" |
-| Particles | Only if each particle is data (e.g. tasks flying into a list) |
+| Particles | Only if each particle is data (e.g. tasks flying into a list), or the dots visibly form letterforms (/pixel-title, 11.3) |
 | Gradient | Subtle tonal surface shift (about 6% luminance) or a real data encoding |
 | 3D / perspective | Clarify spatial relationship; tilt at most 8 degrees; 1 or 2 uses per video |
 | Glow | Focus ring or state indicator in the accent color, never ambient decoration |
@@ -451,6 +487,7 @@ Techniques: word reveals, character stagger, line reveals, mask reveals, scale e
 - Tight display tracking (-0.02 to -0.04em), strong weight contrast, no drop shadows on text, no blur-in text.
 - Prevent overflow with `fitText` from `@remotion/layout-utils` or the official measuring-text guidance; use `text-wrap: balance` on headlines.
 - Hand-drawn emphasis (`@remotion/rough-notation`, see `/remotion-markup` text-highlights) only when it fits the brand voice.
+- Named text effects /words-kinetic (lines slam in) and /pixel-title (a title built from dots) follow these rules too; their specs are in [effects.md](effects.md).
 
 ### 6.5 Camera choreography (P11, V2)
 
@@ -489,6 +526,8 @@ Build transitions from shared elements, object continuity, spatial movement, UI 
 6. Plain cut or crossfade, **at most 30% of transitions**, and only when deliberately calm.
 
 Examples to design toward: sentence → extracted decision → task → project-board item → analytics → final result; task → detail panel; detail panel → workflow node; workflow → analytics dashboard; metric → chart; feature card → product state.
+
+Named transition effects (/portal, /infinite-zoom, /cube-spin, /shatter, /tile-tunnel, /zoom-through, /grid-dive; section 11) are camera or custom transitions (positions 3 and 5 above). Place them at cuts, never the same one twice in a row, and inside the density budget (11.3).
 
 How to build a shared-element morph in Remotion (FLIP, deterministically):
 1. Author two rects for the element: `from` and `to` (x, y, w, h, radius).
@@ -559,6 +598,8 @@ Animate line charts, bar charts, progress rings, counters, timelines and dashboa
 | Dashboard assembly | Panels enter in causal order (KPI row → main chart → table); each panel's data animates 6-10f after its frame lands |
 
 Metric → chart is a transformation, not a cut: the number card morphs into the chart's frame while the figure becomes the headline of the chart.
+
+Named data effects (/growth-chart, /line-draw, /number-roll; section 11) build on these specs and add the honesty rules of 11.3: real numbers only, the source as a small on-screen caption, partial data marked.
 
 ### 6.10 UI state transformation (P18)
 
@@ -814,7 +855,7 @@ Do not say the work is finished until all are true:
 
 Report faithfully. If a gate failed or was skipped (for example "preview only" was requested), say so plainly; never claim a gate that was not run.
 
-Final report format: what was built (story in one sentence, hero moment, scene list), files and paths, commands run with results, frames inspected and defects found/fixed, which real project facts and assets were used and which data is illustrative, assumptions made, output path with ffprobe summary, and how to tweak (tokens file, cue list, scene durations).
+Final report format: what was built (story in one sentence, hero moment, scene list), files and paths, commands run with results, frames inspected and defects found/fixed, which real project facts and assets were used and which data is illustrative, assumptions made, output path with ffprobe summary, and how to tweak (tokens file, cue list, scene durations). When effects were added (section 11), also include the before/after timeline table, the "what to judge" list and any changes from the user's template (11.4).
 
 ---
 
@@ -862,3 +903,99 @@ No `TransitionSeries` overlap in this continuous design, so total = 450. Every t
 | Slow preview or render | Large animated blurs or shadows, too many elements: cut blur layers, memoize static SVG paths |
 | Persistent element resets at a scene boundary | It lives inside a `Sequence` (local frame): move it above the sequences |
 | Total duration off by the transition length | `TransitionSeries` transitions overlap scenes: subtract their durations in the composition's `durationInFrames` |
+
+---
+
+## 11. Effects library (FX)
+
+Named effects for generated films and for existing footage, including presenter (talking-head) video. The full spec of each effect (what it needs, best use, when not to use it, adaptation, swappable parameters, default duration, build notes) is in the companion file [effects.md](effects.md); read an effect's entry before building it. Every effect goes through the decision policy (1.3) after the person check (1.4), and finishes with 11.4.
+
+### 11.1 Requesting an effect
+
+- The user names effects in the brief, for example `/motion-design add /number-roll for 12,400 signups (source: Stripe, Oct 2026), landing on "signups"`. Several at once are fine; the density budget still applies.
+- The slash names are effect names inside this skill, not separate Claude Code commands.
+- When the user asks for "an effect" without naming one, choose candidates from the index with the purpose question (1.3) and offer options.
+
+### 11.2 Index
+
+| Effect | Category | Weight | Needs | Default |
+|---|---|---|---|---|
+| /logo-orbit | Presenter | Hero | Matte; 3-8 logos the user may use | 3.0 s |
+| /claude-beside-me | Presenter | Heavy | Matte; the user's Claude screenshot or recording | 2.5 s |
+| /typewriter-cut | Presenter | Heavy | Matte; text; the word to lock | 2.0 s |
+| /reel-fan | Presenter | Hero | Matte; 3-7 of the user's reels | 2.5 s |
+| /shutter-strike | Presenter | Heavy | Matte; 2-5 photos of the speaker; flash safety | 1.2 s |
+| /before-after | Presenter | Hero | Matte; static shot | 1.5 s + hold |
+| /all-at-once | Presenter | Hero | /logo-orbit and /reel-fan inputs; trigger word; once per video | 3.5 s |
+| /title-orbit | Presenter | Hero | Matte; title text | 3.0 s |
+| /clone-room | Presenter | Hero | Matte; static shot | 2.5 s |
+| /frame-break | Presenter | Heavy | Matte; head room | 2.0 s |
+| /head-pop-out | Presenter | Heavy | Matte | 1.5 s |
+| /vertigo | Presenter | Hero | Matte or depth; static shot | 2.0 s |
+| /spotlight | Presenter | Light | Face position | 2.0 s |
+| /depth-ui | Presenter | Heavy | Matte; 2-5 of the user's UI screenshots | 3.0 s |
+| /ribbon-wrap | Presenter | Heavy | Matte; phrase of about 8 words or fewer | 3.0 s |
+| /tile-tunnel | Presenter or transition | Heavy | Matte when behind a presenter | 2.0 s (1.0 s as transition) |
+| /growth-chart | Data | Hero | Labels, values, unit, source | 3.0 s + hold |
+| /line-draw | Data | Heavy | Real series, unit, source | 3.0 s |
+| /number-roll | Data | Light | Real figure, unit, source | 2.5 s |
+| /pixel-title | Text | Heavy | Title text | 2.5 s |
+| /words-kinetic | Text | Heavy | 1-3 short lines | 2.5 s |
+| /grid-dive | Shot | Hero | 8+ other clips or stills | 2.0 s |
+| /magnifying-lens | Shot | Light | Detail position | 2.0 s |
+| /portal | Transition | Heavy | Two shots | 1.0 s |
+| /infinite-zoom | Transition | Heavy | Two or more shots | 1.5 s |
+| /cube-spin | Transition | Heavy | Two shots | 0.8 s |
+| /liquid-glass | Shot | Light | Text or UI for the pane | 1.2 s + hold |
+| /screen-in-screen | Shot | Light | Nothing extra | 3.0 s |
+| /phone-fan | Shot | Heavy | 3-5 of the user's phone screenshots | 2.5 s |
+| /shatter | Transition | Heavy | Two shots; flash safety | 0.8 s |
+| /pull-back-reveal | Shot | Hero | Nothing extra (generic editor UI) | 2.5 s |
+| /zoom-through | Transition | Heavy | The user's Claude chat screenshot | 1.5 s |
+
+Weight drives the density budget: **Hero** owns the frame and the moment (and also counts as heavy), **Heavy** is a slam, flash, full-frame or 3D move, **Light** is local motion that leaves the shot readable. Presenter effects need a presenter video (1.4).
+
+### 11.3 Rules every effect follows
+
+**Style matching**
+- Read the project's theme first: colour tokens, fonts, easing curves, spring settings (1.1, 4.2, 4.5). Re-skin every effect with them. Template colours (purple or pink gradients, frosted dashboard cards) are placeholders: replace any gradient with one built from the project's own palette.
+- Respect the project's motion rules. If it says "damped, not bouncy", slams land hard but do not wobble.
+- Light mode still applies (4.1): an effect may dim the frame, never black it out.
+
+**Timing**
+- If the project has narration word timings or a music cue file, lock effect starts and landings to them: land a number on its spoken word, a title on the music hit, and keep the `CUES` list in step (6.11). With narration but no word timings, get the timings first (`/remotion-captions` covers transcription).
+- Do not change total runtime, narration, music or cuts unless the user asks.
+- Find space with a contact sheet: render one frame every 2 s (a `--frames` stride at `--scale=0.35`, as in 8.2) and view them in order; choose empty screen areas and quiet stretches.
+- Every effect fully exits before the next important element appears. Never let a moving element cross through an effect.
+
+**Density budget**
+- At most one Hero effect per 15 to 20 seconds.
+- No two Heavy or Hero effects within 3 seconds of each other.
+- /all-at-once at most once per video.
+- After about 5 effects in a 1 to 2 minute video, recommend stopping.
+
+**Honesty**
+- Data effects show their source on screen in a small caption, and mark partial data (for example an unfinished decade) on screen.
+- In 3D charts, label values directly on the bars and add no back-wall grid: in 3D it reads higher than the bar tops and misstates the values.
+- Dot or particle titles must look clearly typographic, never like real stars or real data points.
+- Logos, photos and UI: only assets the user has the right to use (push back, 1.3).
+
+**Flash safety**
+- No more than 3 flashes per second, and no full-frame pure white flash. Prefer a soft brightness pulse.
+
+### 11.4 Finish: QA and report
+
+Required whenever an effect was added or changed:
+
+1. Type-check and lint the changed files (the project's own scripts first; otherwise `npx tsc --noEmit`, plus ESLint when the project has a config).
+2. Render stills at each effect's entry, peak and exit, and check for overlaps with existing text and elements (8.3; run `scripts/qa-frames.cjs` on them).
+3. Do a full render and confirm duration and frame count match the original: the composition's `durationInFrames` is unchanged, and the MP4's duration and frame rate (from `npx remotion ffprobe`) match.
+4. Report a before/after timeline in seconds, plus a short **What to judge** list with the 2 or 3 weakest points of the change:
+
+   | Time (s) | Before | After |
+   |---|---|---|
+   | 12.4-15.0 (example) | Speaker, no overlay | /number-roll lands "12,400" on "signups", source caption bottom left |
+
+5. Report anything changed from the user's template and why (for example "the number does not keep ticking because the value is fixed").
+
+The delivery gates in 8.7 still apply.
