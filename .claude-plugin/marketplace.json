@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "motion-design-director",
+  "description": "Creative-direction layer for Remotion videos, bundled with the official Remotion plugin it depends on.",
+  "owner": {
+    "name": "Eshaan"
+  },
+  "plugins": [
+    {
+      "name": "motion-director",
+      "displayName": "Motion Design Director",
+      "source": "./plugins/motion-director",
+      "homepage": "https://github.com/eshaan-eshaan/motion-design-director",
+      "repository": "https://github.com/eshaan-eshaan/motion-design-director",
+      "license": "MIT",
+      "description": "Creative director for Remotion video work: project-aware story, art direction, camera choreography, transformational transitions and frame-level QA. Installs the official Remotion plugin automatically.",
+      "category": "Design",
+      "tags": ["video", "motion-graphics", "remotion", "creative-direction"]
+    },
+    {
+      "name": "remotion",
+      "displayName": "Remotion (official)",
+      "source": {
+        "source": "github",
+        "repo": "remotion-dev/claude-code-plugin"
+      },
+      "description": "Official Remotion plugin, maintained upstream by the Remotion team. Listed here only so Motion Design Director can depend on it.",
+      "homepage": "https://www.remotion.dev/docs/ai/claude-code-plugin",
+      "repository": "https://github.com/remotion-dev/claude-code-plugin",
+      "category": "Design",
+      "tags": ["video", "react", "remotion", "official-upstream"]
+    }
+  ]
+}

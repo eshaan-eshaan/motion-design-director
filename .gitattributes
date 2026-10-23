@@ -1,0 +1,7 @@
+# Keep the shell installer LF on every platform; a CRLF checkout breaks it on macOS/Linux.
+*.sh text eol=lf
+*.ps1 text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.cjs text eol=lf
+LICENSE text eol=lf

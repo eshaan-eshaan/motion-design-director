@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "motion-director",
+  "displayName": "Motion Design Director",
+  "version": "2.0.0",
+  "description": "Creative-director layer for Remotion: project-aware story and art direction, real-asset intelligence, feature-to-motion mapping, camera choreography, transformational transitions and frame-level QA. Delegates implementation to the official Remotion plugin, which is installed automatically.",
+  "author": {
+    "name": "Eshaan"
+  },
+  "homepage": "https://github.com/eshaan-eshaan/motion-design-director",
+  "repository": "https://github.com/eshaan-eshaan/motion-design-director",
+  "license": "MIT",
+  "keywords": ["remotion", "video", "motion-design", "creative-direction", "promo-video"],
+  "dependencies": ["remotion"]
+}
