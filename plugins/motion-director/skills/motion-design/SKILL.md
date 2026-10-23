@@ -40,24 +40,24 @@ Tags like (P12) refer to the numbered principles this skill was written from. Ta
 | Animation, sequencing, transitions, fonts, media, images and assets, effects, 3D, SFX, motion blur, compositions | `/remotion-markup` |
 | Open the live preview (Studio) | `/remotion-studio` |
 | Render stills, frames, final MP4 | `/remotion-render` |
-| Studio-editable structure (`Interactive.*`, connected compositions) | `/remotion-interactivity` |
+| Studio-editable structure (`Interactive.create()`, `Interactive.*`, tracks and timeline structure, connected compositions) | `/remotion-interactivity` |
 | Captions / subtitles | `/remotion-captions` |
 | Look up current API docs (use whenever an API or behavior is uncertain) | `/remotion-docs` |
 | Media metadata, trimming, cropping in the browser | `/remotion-multimedia` |
 | Player, Lambda, SaaS or automation around Remotion | `/remotion-saas` |
 | Also available: geographic maps, upgrading Remotion | `/remotion-maps`, `/remotion-upgrade` |
 
-For uncertain APIs, read current docs through `/remotion-docs` (append `.md` to a docs URL) instead of guessing. The starter kit in section 7.6 was type-checked and sample-rendered against Remotion 4.0.532 (exactly what was and was not verified is listed at the top of `starter-kit.md`); re-check if the project uses a different version.
+For uncertain APIs, read current docs through `/remotion-docs` (append `.md` to a docs URL) instead of guessing. The starter kit in section 7.6 was type-checked and sample-rendered against Remotion 4.0.532, and type-checked again after its timing helper was revised for the 4.0.538 skill guidance (exactly what was and was not verified is listed at the top of `starter-kit.md`); re-check if the project uses a different version.
 
 **Conflict table: where an official default and a creative requirement disagree**
 
 | Topic | Official default | Resolution in this skill |
 |---|---|---|
 | Rendering | Do not render unless the user is very explicit; show the Studio preview instead | Invoking `/motion-design` to *make a video* is explicit consent for QA stills and one final MP4. Still open Studio first and keep it open. If the user says "preview only" or "do not render", honor that, skip the final render, and report that gate as intentionally skipped. |
-| Inline, hand-editable `interpolate()` and no shared constants | Keeps Studio editing live | Hero elements and scene timing (`name`, `from`, `durationInFrames`, `premountFor`) stay inline. Systemic motion (tokens, spring presets, stagger, charts, camera) may live in helpers. The user's design-system requirements win over Studio-editability; accept greyed-out values for helper-driven styles. |
+| Inline, hand-editable `interpolate()` and no shared constants | Keeps Studio editing live | Hero elements and scene timing (`name`, `from`, `durationInFrames`, `trimBefore`) stay inline, with seconds written against `fps` from `useVideoConfig()` (for example `from={2 * fps}`), never against a fixed FPS constant. Systemic motion (tokens, spring presets, stagger, charts, camera) may live in helpers. The user's design-system requirements win over Studio-editability; accept greyed-out values for helper-driven styles. |
 | `scale`/`translate`/`rotate` CSS properties instead of `transform` | Editable in Studio | Use the shorthands by default (with `output: 'perceptual-scale'` for scale). Use `transform` for perspective, skew, order-sensitive chains, and **the camera rig's world transform**: in a render test the `translate`/`scale` shorthands produced blank frames at zoom above about 2 with large offsets, while one `transform` string rendered correctly. |
 | Programmatic loops hurt per-instance editing | Separate JSX node per editable item | Loops are fine for repeated items that are intentionally one template (stagger rows, chart bars, characters). Scenes and hero components get their own JSX nodes. |
-| Light leaks, motion blur, effects exist | Optional features | Subject to the human-designed rule (section 3): off by default, only with a stated purpose. Light-leak overlays are off by default in light mode. |
+| Light leaks, motion blur and the built-in `@remotion/effects` (blur, glow, vignette, color correction and more) exist | Optional features; when an element supports the `effects` prop, prefer a built-in effect over a CSS approximation | Use the built-in effect when one fits, but only under the human-designed rule (section 3): off by default, only with a stated purpose. Light-leak overlays are off by default in light mode. |
 | Two spring APIs | `Easing.spring()` inside `interpolate()` and `spring()` | Use `spring()` for physics-timed motion; use inline `interpolate()` with `Easing.bezier`/`Easing.spring` for keyframed, editable motion. The same preset objects feed both. |
 
 Also honor the official rule: users may edit code outside the conversation. If a file changed in a surprising way, do not overwrite it; assume it was intentional or ask.
@@ -152,7 +152,7 @@ Run once per video that contains footage, before choosing effects:
 1. Sample about 10 frames spread across the video and run a person or face detector on them (for example MediaPipe face detection or selfie segmentation).
 2. A person visible in most sampled frames: a **presenter video**. No person found: a **no-presenter video**.
 
-**Presenter video.** Before applying any presenter effect, generate a person matte for the clip silently, without asking: Robust Video Matting if available, MediaPipe Selfie Segmentation as the lighter fallback. If neither is installed, set up the fallback in a project-local environment (never globally) and note it in the final report; if that is impossible, say so in one line and treat presenter effects as unavailable for this run. Cache the matte next to the clip (`<clip>_matte.webm`, or a transparent `<clip>_person.webm`) and reuse it on later runs instead of regenerating it. Build presenter effects as three layers, **background → effect → person on top**, so elements can pass behind the person. Then apply presenter effects normally under 1.3.
+**Presenter video.** Before applying any presenter effect, generate a person matte for the clip silently, without asking: Robust Video Matting if available, MediaPipe Selfie Segmentation as the lighter fallback. If neither is installed, set up the fallback in a project-local environment (never globally) and note it in the final report; if that is impossible, say so in one line and treat presenter effects as unavailable for this run. Cache the matte next to the clip (`<clip>_matte.webm`, or a transparent `<clip>_person.webm`) and reuse it on later runs instead of regenerating it. Build presenter effects as three layers, **background → effect → person on top**, so elements can pass behind the person, and keep all three inside the shot's own `Sequence` so a trim or speed change moves them together. Then apply presenter effects normally under 1.3.
 
 **No-presenter video** (animation, screen recording, B-roll). Do not generate a matte and do not mention matting. Do not offer presenter-only effects (the Presenter rows in 11.2) unless the user asks for one by name. If they do, use a version without "behind you" when it still makes sense (for example /pixel-title or /title-orbit centred on screen); otherwise say in one line that it needs a person on camera and suggest the closest effect that works. Data, text and transition effects work as normal.
 
@@ -544,7 +544,7 @@ For camera transitions between scenes, author a custom `TransitionPresentation` 
 | `spring()` | Physical settle: entrances with weight, pops, drag drops |
 | `interpolate()` + `Easing.bezier` | Authored motion: exits, camera, wipes, colors, progress |
 | `Easing.spring()` inside `interpolate()` | Keyframed, Studio-editable springs |
-| `Sequence`, `from`, `TransitionSeries` | Timing and scene structure |
+| `Sequence`, `Track`, `from`, `TransitionSeries` | Timing and scene structure (which to use: 7.1) |
 | `scale` / `translate` / `rotate` / `opacity` | Default transform channels |
 | `clipPath: inset()`, SVG masks, `overflow: hidden` | Masking and clipping |
 
@@ -616,7 +616,7 @@ Even without audio, leave timing points for clicks, impacts, transitions, metric
 
 - Keep a typed `CUES` list in code and a cue column in the storyboard (section 7).
 - Aim for roughly one cue per 0.5-1s in dense sections; transitions land on cue frames.
-- Do not add audio unless asked. If asked, use `<Audio>` per the official SFX reference and place sounds on the cue frames.
+- Do not add audio unless asked. If asked, use `<Audio>` from `@remotion/media` per the official SFX reference and place sounds on the cue frames.
 
 ### 6.12 Aspect ratios (P31)
 
@@ -666,7 +666,7 @@ src/
   compositions/  Promo16x9.tsx  Promo9x16.tsx  Promo1x1.tsx
 ```
 
-Follow the official guidance for scenes: each substantial scene in its own file, preferably `Interactive.withSchema({wrapInSequence: true})` and registered as a connected composition; hardcoded `name` props; `premountFor={fps}` on every timed item; inline `from` and `durationInFrames` (see `/remotion-interactivity` and `/remotion-markup`). The starter kit below uses plain elements for portability; wrap hero elements in `Interactive.*` at call sites where Studio editing matters.
+Follow the official guidance for scenes, and read the `/remotion-interactivity` timeline-structure guide before choosing the markup hierarchy: each substantial scene in its own file, exported with `Interactive.create()` (`layout: 'absolute-fill'` for a scene, `layout: 'none'` for a bounded element) and, when it deserves its own timeline, registered as a connected composition with the same component reference; hardcoded `name` props; inline `from`, `durationInFrames` and `trimBefore`, written against `fps` from `useVideoConfig()`. Put independently timed, non-overlapping scenes on a named `Track`, and consecutive scenes that should stay adjacent in a `TransitionSeries`. Keep `useCurrentFrame()` in the smallest component that needs it (see `/remotion-interactivity` and `/remotion-markup`). The starter kit below uses plain elements for portability; wrap hero elements in `Interactive.*` at call sites where Studio editing matters.
 
 ### 7.2 Reusable motion presets (P28)
 
@@ -685,7 +685,7 @@ Follow the official guidance for scenes: each substantial scene in its own file,
 
 ### 7.3 Design tokens (P29)
 
-Everything visual and temporal comes from tokens: `color`, `font`, `radius`, `shadow`, `space`, spring presets, easing tokens, durations in seconds converted with `sec()`. Changing a token changes the whole video.
+Everything visual and temporal comes from tokens: `color`, `font`, `radius`, `shadow`, `space`, spring presets, easing tokens, durations in seconds converted with `sec(seconds, fps)` using `fps` from `useVideoConfig()`. Changing a token changes the whole video.
 
 ### 7.4 Persistent stage for shared elements and camera
 
@@ -694,17 +694,16 @@ Inside a `<Sequence>`, `useCurrentFrame()` returns the *local* frame. Anything t
 - Place `CameraRig` and persistent layers **above** the scene sequences (in the composition root, which is not inside a `Sequence`).
 - Scenes render inside; the persistent layer renders as a sibling driven by the root frame.
 - When persistent layers need scene boundaries, keep a single `timeline.ts` and derive scene `from`/`durationInFrames` from it, accepting less Studio-editability for those values (coherence beats editability).
-- Use `TransitionSeries` when scenes are self-contained; use the continuous stage when the story relies on shared elements. A stage may wrap a `TransitionSeries`.
+- Use `TransitionSeries` when scenes are self-contained and adjacent, and a named `Track` when they are independently timed; use the continuous stage when the story relies on shared elements. A stage may wrap either.
 
 ```tsx
 // illustrative (not part of the starter kit)
 export const Promo: React.FC = () => {
-  const {fps} = useVideoConfig();
   return (
     <AbsoluteFill style={{backgroundColor: color.bg}}>
       <CameraRig shots={shots}>
-        <Sequence name="Hook" from={0} durationInFrames={72} premountFor={fps}><Hook /></Sequence>
-        <Sequence name="Product" from={72} durationInFrames={66} premountFor={fps}><Product /></Sequence>
+        <Sequence name="Hook" from={0} durationInFrames={72}><Hook /></Sequence>
+        <Sequence name="Product" from={72} durationInFrames={66}><Product /></Sequence>
         <SharedCardLayer />   {/* reads the global frame itself via useCurrentFrame() */}
       </CameraRig>
     </AbsoluteFill>
@@ -729,7 +728,7 @@ Copy-ready source lives in the companion file [starter-kit.md](starter-kit.md) i
 | `design/tokens.ts` | `font`, `color`, `radius`, `shadow`, `space` (loads fonts with `loadFont()`) |
 | `motion/springs.ts` | `SpringPreset`, `springFast`, `springSoft`, `springHeavy`, `springSubtle`, `springElastic`, `springAt()` |
 | `motion/easings.ts` | `ease.outExpo`, `.outQuart`, `.inOut`, `.in`, `.camera` |
-| `motion/timeline.ts` | `FPS`, `sec()`, `Cue`, `CUES` |
+| `motion/timeline.ts` | `sec(seconds, fps)`, `Cue`, `CUES` (cue times in seconds) |
 | `motion/useLayout.ts` | `useLayout()` returning `orientation`, `safe`, `minType`, `social`, `pick()` |
 | `motion/presets.ts` | `progress`, `fadeUp`, `fadeScale`, `slideLeft`, `slideRight`, `popIn`, `springIn`, `springOut`, `scaleFade`, `maskReveal`, `staggerReveal`, `panelExpand`, `cardReorder`, `Rect` |
 | `motion/camera.tsx` | `Shot`, `CameraRig`, `shotFor()`, `cameraPush()`, `cameraPull()` |
@@ -964,6 +963,7 @@ Weight drives the density budget: **Hero** owns the frame and the moment (and al
 
 **Timing**
 - If the project has narration word timings or a music cue file, lock effect starts and landings to them: land a number on its spoken word, a title on the music hit, and keep the `CUES` list in step (6.11). With narration but no word timings, get the timings first (`/remotion-captions` covers transcription).
+- Word timings are relative to their source file. Put an effect tied to a spoken word inside the same `Sequence` (or `TransitionSeries.Sequence`) as its shot, and place it at the word's source time minus the shot's `trimBefore`, so trims and speed changes keep it on the word.
 - Do not change total runtime, narration, music or cuts unless the user asks.
 - Find space with a contact sheet: render one frame every 2 s (a `--frames` stride at `--scale=0.35`, as in 8.2) and view them in order; choose empty screen areas and quiet stretches.
 - Every effect fully exits before the next important element appears. Never let a moving element cross through an effect.

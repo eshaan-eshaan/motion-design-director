@@ -2,11 +2,12 @@
 
 Companion to [SKILL.md](SKILL.md). **What was actually verified** (`remotion@4.0.532`, TypeScript 5.9, React 18 types):
 - All nine `// src/...` files **type-check** under `tsc --noEmit` with `strict` and `noUnusedLocals`.
+- **Re-checked for the Remotion 4.0.538 skill guidance (October 2026):** `motion/timeline.ts` was revised (no fixed FPS constant; cue times in seconds; `sec(seconds, fps)` with `fps` from `useVideoConfig()`). All nine files, plus a test component using `sec(cue.at, fps)`, type-check again under the same settings against `remotion@4.0.532` types, TypeScript 5.9.3 and React 19 types; a deliberately broken file failed as expected. The revised helper was not render-tested, and the `remotion@4.0.538` npm types were not installed for this check.
 - A test composition (1920x1080, 30fps) using the kit was **rendered at frames 12, 36, 76, 110, 149 and inspected**: Inter loads; descenders survive in `KineticText` (word and character modes); `Cursor` tip and click ripple align on the target; `staggerReveal`, `popIn`, `springIn`, `maskReveal` and `panelExpand` render correctly; `CameraRig` + `shotFor` centers the target exactly (pixel check), including with tilt (4 and -6 degrees) at about 2.3-3.2x zoom. That render exposed a bug (blank frames from the `translate`/`scale` shorthands at high zoom), which is fixed in the camera block below.
 - `scripts/qa-frames.cjs` was run against good frames and against the broken ones (it flags the blank frames).
 - **Not verified:** ESLint (`@remotion/eslint-config`), unit tests of the pure helpers, visual renders of `slideLeft`, `slideRight`, `scaleFade`, `springOut`, `cardReorder`, `cameraPush`, `cameraPull`, a full MP4 render, and 9:16 or 1:1 compositions.
 
-Each block that begins with `// src/...` is a real file: copy it into the project at that path and adapt `design/tokens.ts` to the brand. Components use plain elements for portability; wrap hero elements in `Interactive.*` (see `/remotion-interactivity`) where Studio editing matters. Place `CameraRig` above scene `Sequence`s so it reads the global frame.
+Each block that begins with `// src/...` is a real file: copy it into the project at that path and adapt `design/tokens.ts` to the brand. Components use plain elements for portability; export scenes with `Interactive.create()` and wrap hero elements in `Interactive.*` (see `/remotion-interactivity`) where Studio editing matters. Place `CameraRig` above scene `Sequence`s so it reads the global frame.
 
 ```ts
 // src/design/tokens.ts
@@ -93,21 +94,22 @@ export const ease = {
 
 ```ts
 // src/motion/timeline.ts
-export const FPS = 30;
-export const sec = (seconds: number, fps: number = FPS) => Math.round(seconds * fps);
+// No fixed FPS constant: pass `fps` from useVideoConfig() so timing stays right if the frame rate changes.
+// Inside a component: const {fps} = useVideoConfig(); const at = sec(cue.at, fps);
+export const sec = (seconds: number, fps: number) => Math.round(seconds * fps);
 
 export type Cue = {
-  frame: number;
+  at: number; // seconds from the start of the composition
   kind: 'click' | 'impact' | 'transition' | 'metric-complete' | 'workflow-activate' | 'feature-reveal' | 'cta';
   note: string;
 };
 
-// Sync points for later audio/SFX. Keep sorted and in step with the storyboard's cue column.
+// Sync points for later audio/SFX, in seconds. Keep sorted and in step with the storyboard's cue column.
 export const CUES: Cue[] = [
-  {frame: sec(0.3), kind: 'impact', note: 'Headline lands'},
-  {frame: sec(4.4), kind: 'click', note: 'Command bar opens'},
-  {frame: sec(10), kind: 'metric-complete', note: 'Conflicts reach zero'},
-  {frame: sec(13.8), kind: 'cta', note: 'CTA button settles'},
+  {at: 0.3, kind: 'impact', note: 'Headline lands'},
+  {at: 4.4, kind: 'click', note: 'Command bar opens'},
+  {at: 10, kind: 'metric-complete', note: 'Conflicts reach zero'},
+  {at: 13.8, kind: 'cta', note: 'CTA button settles'},
 ];
 ```
 

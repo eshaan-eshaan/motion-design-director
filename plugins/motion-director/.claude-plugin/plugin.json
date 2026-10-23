@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "motion-director",
   "displayName": "Motion Design Director",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Creative-director layer for Remotion: project-aware story and art direction, real-asset intelligence, feature-to-motion mapping, camera choreography, transformational transitions and frame-level QA. Delegates implementation to the official Remotion plugin, which is installed automatically.",
   "author": {
     "name": "Eshaan"

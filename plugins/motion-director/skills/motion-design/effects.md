@@ -13,7 +13,9 @@ How to read an entry:
 | Swap | Parameters the user can change; defaults come from the project's tokens (11.3) |
 | Build | How to construct it; implementation details come from the official skills |
 
-**Presenter layering.** Every presenter effect is three layers: background (the original clip) → effect → person (the cached matte cut-out) on top (1.4). An element that passes both behind and in front of the head (orbits, ribbons) is split in two: the far half renders below the person layer, the near half above it. Find the head from the matte (top of the person's bounding box, smoothed over a few frames so the orbit centre does not jitter).
+**Presenter layering.** Every presenter effect is three layers: background (the original clip) → effect → person (the cached matte cut-out) on top (1.4). An element that passes both behind and in front of the head (orbits, ribbons) is split in two: the far half renders below the person layer, the near half above it. Find the head from the matte (top of the person's bounding box, smoothed over a few frames so the orbit centre does not jitter). Keep the shot's `<Video>`, the matte layer and the effect inside the shot's own `Sequence` (or `TransitionSeries.Sequence`) so a trim or speed change moves all three together, and place anything tied to a spoken word at the word's source time minus the shot's `trimBefore` (11.3).
+
+**Built-in effects (Remotion 4.0.538).** `@remotion/effects` ships about 80 GPU effects (blur, glow, vignette, exposure, color correction, distortion and more). They go on the `effects` prop of `<Video>` from `@remotion/media`, `<Img>`, `<CanvasImage>`, `<AnimatedImage>`, `<Solid>`, `<HtmlInCanvas>` and the `@remotion/shapes` shapes. Plain HTML, `Interactive.*` wrappers, `AbsoluteFill` and `Sequence` do not take `effects`: wrap them in `<HtmlInCanvas>` first. When an element supports `effects` and a built-in fits, prefer it over a CSS approximation (the official rule). Read the `/remotion-markup` effects reference for imports, parameters and the WebGL render setting before using one; the Build notes below name the built-ins that fit, and section 3 still decides whether an effect belongs at all.
 
 ---
 
@@ -67,7 +69,7 @@ Photo prints of the speaker slam in around them like camera flashes.
 - **Not when:** calm or educational tone; photos of other people (push back, 1.3); within 3 s of another heavy effect.
 - **If missing:** no photos → offer stills taken from the user's own clip, or skip; no presenter → the prints slam onto the centre of the frame (no occlusion needed).
 - **Swap:** number of prints, print border style, rotation spread (default ±8 degrees), pulse strength, slam rhythm.
-- **Build:** each print lands hard with a non-bouncing preset; the "flash" is a soft brightness pulse on the footage, never a white frame. **Flash safety (11.3) applies:** at most 3 flashes per second, no full-frame pure white.
+- **Build:** each print lands hard with a non-bouncing preset; the "flash" is a soft brightness pulse made by animating `brightness()` or `exposure()` on the shot's `<Video>`, never a white frame. **Flash safety (11.3) applies:** at most 3 flashes per second, no full-frame pure white.
 
 ### /before-after
 A wipe turns the speaker's real room into a clean white studio behind them.
@@ -77,7 +79,7 @@ A wipe turns the speaker's real room into a clean white studio behind them.
 - **Not when:** the room is part of the message; a handheld camera (the studio will not follow the motion); the matte fails at the edges.
 - **If missing:** no presenter → offer a plain mask wipe between two states of the shot, or /pull-back-reveal.
 - **Swap:** wipe direction and shape (line, or a circle growing from the speaker), studio colours (`bg`/`bgSunken` tokens), floor shadow under the speaker, hold length, revert at the end (yes/no).
-- **Build:** studio = token background with a soft floor shadow and a barely visible vignette; wipe the original-room layer away with a `clipPath` mask (`maskReveal` pattern); the person stays on top throughout.
+- **Build:** studio = token background with a soft floor shadow and a barely visible vignette; wipe the original-room layer away with a `clipPath` mask (`maskReveal` pattern); the person stays on top throughout. Match the speaker to the white studio with `colorCorrection()` (white balance, exposure) on their layer; footage shot on a green screen can use `colorKey()` instead of the matte.
 
 ### /all-at-once
 /logo-orbit and /reel-fan land together on one spoken word.
@@ -107,7 +109,7 @@ Copies of the speaker step out from behind them into the room.
 - **Not when:** a moving camera; big gestures (the clones copy them); a cramped room.
 - **If missing:** no presenter → say it needs a person on camera and suggest /grid-dive.
 - **Swap:** number of clones (default 2 to 4), spacing, time offset per clone (default 6f echo), clone treatment (slightly smaller and desaturated), step direction.
-- **Build:** extra copies of the person layer with time offsets, placed behind the original at smaller scale; they step out with a stagger; the original stays on top.
+- **Build:** extra copies of the person layer with time offsets, placed behind the original at smaller scale; they step out with a stagger; the original stays on top. Desaturate the clones with `saturation()` on their `<Video>` layers.
 
 ### /frame-break
 The speaker sits inside a photo frame, then their head breaks out of it.
@@ -137,7 +139,7 @@ A dolly zoom: the room stretches while the speaker stays the same size.
 - **Not when:** handheld or moving camera; a flat background such as a plain wall; a calm explainer.
 - **If missing:** no matte or depth → do not fake it; offer a slow push-in (6.5); no presenter but a static shot with depth and a clear central object → apply it to the object.
 - **Swap:** direction (room stretches away vs. collapses in), strength (default background scale 1.0 to 1.35), duration, easing (the `camera` token).
-- **Build:** needs a clean plate, because the scaled background would otherwise show a second, larger speaker around the cut-out: fill the speaker's area in the background layer (from a frame without them, or by stretching the surrounding pixels). Scale the plate around the head centre with one `transform` string (6.5) while the person layer stays at constant scale.
+- **Build:** needs a clean plate, because the scaled background would otherwise show a second, larger speaker around the cut-out: fill the speaker's area in the background layer (from a frame without them, or by stretching the surrounding pixels). Scale the plate around the head centre with one `transform` string (6.5) while the person layer stays at constant scale. A subtle `zoomBlur()` on the plate (never on the person) can sell the stretch.
 
 ### /spotlight
 One theatre light sweeps in and finds the speaker's face.
@@ -147,7 +149,7 @@ One theatre light sweeps in and finds the speaker's face.
 - **Not when:** the face moves fast; a light-mode film where dimming would break 4.1 (keep the dim moderate).
 - **If missing:** no face position → run face detection on the effect's frames, or ask for one keyframe; no presenter → aim the light at a detail, or use /magnifying-lens.
 - **Swap:** light warmth, cone size and softness, surround dim (default 35%, never black), sweep path.
-- **Build:** a soft radial mask over the footage that dims the surround and leaves the face at full exposure; it needs the face position, not the matte.
+- **Build:** dim the surround with `exposure()` (or `colorCorrection()`) on the shot's `<Video>` through a soft radial mask, or use `vignette()` if its centre can follow the face (check its parameters); the face stays at full exposure and the surround never goes black. It needs the face position, not the matte.
 
 ### /depth-ui
 App windows float around the speaker at different depths.
@@ -157,7 +159,7 @@ App windows float around the speaker at different depths.
 - **Not when:** a window would cover the face; screenshots unreadable at the size they need (4.3); third-party brand UI (push back, 1.3).
 - **If missing:** no screenshots → ask, and never invent UI (1.1); no presenter → float the windows around the centre of the screen.
 - **Swap:** number of windows, depth spread (parallax 0.3-0.6x, 6.5), drift amplitude (tertiary motion, 6.1), which window comes forward to be read.
-- **Build:** windows placed behind and in front of the person layer by depth; one window may come forward to hero size (4.3) for reading.
+- **Build:** windows placed behind and in front of the person layer by depth; one window may come forward to hero size (4.3) for reading. The screenshots are `<Img>` elements, so far windows can soften with `blur()` (2-5px, section 3) and every window can carry `dropShadow()`.
 
 ### /ribbon-wrap
 A ribbon carrying the user's words wraps around the speaker.
@@ -205,7 +207,7 @@ A chart that draws itself: gradient line, glowing head, filled area and an end c
 - **If missing:** push back as above; with only 1 or 2 values offer /number-roll.
 - **Swap:** line gradient (built from the project's palette), glow strength, area opacity, end-chip text (final value and unit), axis labels, draw duration (30-45f, 6.9).
 - **Honesty:** label the axis range clearly; draw the last segment dashed and labelled when the final period is partial; source caption. The glow is a focus indicator on the line's current point in the accent colour, not ambient decoration (section 3).
-- **Build:** the 6.9 line-chart spec: axes fade first, the line draws with `evolvePath` from `@remotion/paths`, the area follows 10f behind, the head dot rides the path's current end, the end chip pops when the draw completes.
+- **Build:** the 6.9 line-chart spec: axes fade first, the line draws with `evolvePath` from `@remotion/paths`, the area follows 10f behind, the head dot rides the path's current end (a `<Circle>` from `@remotion/shapes` with `glow()`), the end chip pops when the draw completes.
 
 ### /number-roll
 A number rolls up like an odometer, with motion blur, and lands.
@@ -231,7 +233,7 @@ The title builds itself out of dots.
 - **If missing:** no head room above the presenter → place it beside them, or offer /title-orbit.
 - **Swap:** dot size and spacing, dot colour (ink or accent), assembly (scatter in vs. sweep), the display face it samples.
 - **Honesty:** it must read as typography: a regular dot grid, complete letterforms at the end, no twinkling or star-like glow.
-- **Build:** rasterise the title onto a grid to get dot positions; each dot travels from a start position chosen with `random(seed)` (deterministic) to its slot, with a stagger.
+- **Build:** rasterise the title onto a grid to get dot positions; each dot travels from a start position chosen with `random(seed)` (deterministic) to its slot, with a stagger. Do not substitute the built-in `dotGrid()`: it is a texture, not letterforms.
 
 ### /words-kinetic
 Words slam in line by line; the last word lands in a gradient.
@@ -267,7 +269,7 @@ A glass disc slides over the shot and magnifies a detail.
 - **Not when:** the detail moves; the source is too low-resolution for the zoom (1.2).
 - **If missing:** no position → offer 2 or 3 candidate details marked on a still.
 - **Swap:** lens size, magnification (default 2x), rim (hairline border and soft shadow from the tokens), path.
-- **Build:** a circular clip of a scaled copy of the shot, centred on the detail.
+- **Build:** a circular clip of a scaled copy of the shot, centred on the detail; `fisheye()` or `barrelDistortion()` on the copy gives the glass curvature.
 
 ### /portal
 A ring of light opens and the camera flies straight through it into the next shot.
@@ -277,7 +279,7 @@ A ring of light opens and the camera flies straight through it into the next sho
 - **Not when:** within 3 s of another heavy effect; a calm film; right after another fly-through transition (6.6).
 - **If missing:** nothing extra is needed.
 - **Swap:** ring colour (the accent), ring thickness, where it opens (centre, or on an object), fly-through speed.
-- **Build:** the incoming shot shows inside the ring; the camera scales through it with one `transform` string; a custom `TransitionPresentation` when built as a scene transition (6.6).
+- **Build:** draw the ring as a `<Circle>` from `@remotion/shapes` with `glow()` in the accent colour; the incoming shot shows inside the ring; the camera scales through it with one `transform` string; a custom `TransitionPresentation` when built as a scene transition (6.6).
 
 ### /infinite-zoom
 Frames nested inside frames; the camera pushes through them into the next shot.
@@ -307,7 +309,7 @@ A drop of glass lands and expands into a glass pane that holds text or UI.
 - **Not when:** glass is already on screen (4.1 bans excessive glassmorphism: one pane at a time).
 - **If missing:** no content → ask, or skip.
 - **Swap:** pane size, blur (2-5px, section 3), tint (the `surface` token, semi-opaque), corner radius (tokens), where the drop lands.
-- **Build:** morph from a circle to a rounded rectangle with `panelExpand`; the blur is render-costly, so keep it to one pane.
+- **Build:** morph from a circle to a rounded rectangle with `panelExpand`; frost what sits behind the pane with `regionBlur()` or `blur()` on the underlying `<Video>` (wrap HTML content in `<HtmlInCanvas>`). The blur is render-costly, so keep it to one pane.
 
 ### /screen-in-screen
 The shot plays on a laptop screen.
@@ -317,7 +319,7 @@ The shot plays on a laptop screen.
 - **Not when:** small text in the footage becomes unreadable on the smaller screen (4.3).
 - **If missing:** nothing extra is needed.
 - **Swap:** device shape (a generic laptop drawn in code, no brand logos), angle (at most 8 degrees), whether it pushes in to full screen.
-- **Build:** a generic laptop in SVG or CSS from the tokens, the clip playing on its screen; an optional push from device to full frame with the camera rig.
+- **Build:** a generic laptop in SVG or CSS from the tokens, the clip playing on its screen (`cornerPin()` on the `<Video>` maps it onto an angled screen without a 3D transform); an optional push from device to full frame with the camera rig.
 
 ### /phone-fan
 Phones fan out like a hand of cards.
